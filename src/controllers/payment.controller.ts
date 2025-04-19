@@ -1,0 +1,150 @@
+import { stripe } from "../app";
+import { tryCatch } from "../middlewares/error.middleware";
+import { Coupon } from "../models/coupon.model";
+import { Product } from "../models/product.model";
+import { User } from "../models/user.model";
+import { OrderItemType, ShippingInfoType } from "../types/types";
+import ErrorHandler from "../utils/utility-class";
+
+const getAllCoupons = tryCatch(async (req, res, next) => {
+  const coupons = await Coupon.find({});
+
+  if (coupons.length === 0)
+    return next(new ErrorHandler("No coupons available", 400));
+
+  return res.status(201).json({
+    success: true,
+    coupons,
+  });
+});
+
+const deleteCoupon = tryCatch(async (req, res, next) => {
+  const { id } = req.params;
+
+  const coupon = await Coupon.findByIdAndDelete(id);
+
+  if (!coupon) return next(new ErrorHandler("No coupon found", 400));
+
+  return res.status(201).json({
+    success: true,
+    message: `Coupon ${coupon.code} deleted successfully`,
+  });
+});
+
+const createPaymentIntent = tryCatch(async (req, res, next) => {
+  const { id } = req.query;
+
+  const user = await User.findById(id).select("name");
+
+  if (!user) return next(new ErrorHandler("Please login to continue.", 401));
+
+  const {
+    items,
+    shippingInfo,
+  }: // coupon
+  {
+    items: OrderItemType[];
+    shippingInfo: ShippingInfoType;
+    // coupon: string | undefined;
+  } = req.body;
+
+  // const subtotal = items.reduce(
+  //   (prev, curr) => curr.price * curr.quantity + prev,
+  //   0
+  // );
+
+  // const tax = subtotal * 0.18;
+
+  // const shipping = subtotal > 1000 ? 0 : 200;
+
+  // const total = Math.floor(subtotal + tax + shipping);
+
+  if (!items)
+    return next(new ErrorHandler("Please add an item to checkout", 400));
+
+  if (!shippingInfo)
+    return next(new ErrorHandler("Please add shipping details", 400));
+
+  // let discountAmount = 0;
+
+  // if (coupon) {
+  //   const discount = await Coupon.findOne({ code: coupon });
+  //   if (!discount) return next(new ErrorHandler("Invalid Coupon Code", 400));
+  //   discountAmount = discount.amount;
+  // }
+
+  const productIDs = items.map((item) => item._id);
+
+  const products = await Product.find({
+    _id: { $in: productIDs },
+  });
+
+  const subtotal = products.reduce((prev, curr) => {
+    const item = items.find((i) => i._id === curr._id.toString());
+    if (!item) return prev;
+    return curr.price * item.quantity + prev;
+  }, 0);
+
+  const tax = subtotal * 0.18;
+
+  const shipping = subtotal > 1000 ? 0 : 200;
+
+  // const total = Math.floor(subtotal + tax + shipping - discountAmount);
+  const total = Math.floor(subtotal + tax + shipping);
+
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: total * 100,
+    currency: "inr",
+    description: "Novabuy",
+    shipping: {
+      name: user.name,
+      address: {
+        line1: shippingInfo.street,
+        postal_code: shippingInfo.pincode.toString(),
+        city: shippingInfo.city,
+        state: shippingInfo.state,
+        country: shippingInfo.country,
+      },
+    },
+  });
+
+  return res.status(201).json({
+    success: true,
+    clientSecret: paymentIntent.client_secret,
+  });
+});
+
+const createCoupon = tryCatch(async (req, res, next) => {
+  const { coupon, amount } = req.body;
+
+  if (!coupon || !amount)
+    return next(new ErrorHandler("One of the fields is missing", 400));
+
+  await Coupon.create({ code: coupon, amount });
+
+  return res.status(201).json({
+    success: true,
+    message: `Coupon "${coupon}" created successfully`,
+  });
+});
+
+const applyDiscount = tryCatch(async (req, res, next) => {
+  const { couponCode } = req.query;
+
+  const coupon = await Coupon.findOne({ code: couponCode });
+
+  if (!coupon) return next(new ErrorHandler("Invalid coupon code", 400));
+
+  return res.status(200).json({
+    success: true,
+    message: coupon.amount,
+  });
+});
+
+export {
+  applyDiscount,
+  createCoupon,
+  createPaymentIntent,
+  deleteCoupon,
+  getAllCoupons,
+};
