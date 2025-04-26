@@ -8,24 +8,22 @@ export const errorMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
+  const statusCode = err.statusCode || 500;
   let message = err.message || "Internal Server Error";
-  let statusCode = err.statusCode || 500;
 
+  // Handle specific error types
   if (err.name === "CastError") {
     message = "Invalid ID";
-    res.status(statusCode).json({
-      success: false,
-      message,
-    });
-  } else {
-    res.status(statusCode).json({
-      success: false,
-      message,
-    });
   }
+
+  res.status(statusCode).json({
+    success: false,
+    message,
+  });
 };
 
 export const tryCatch =
-  (func: Controller) => (req: Request, res: Response, next: NextFunction):void => {
+  (func: Controller) =>
+  (req: Request, res: Response, next: NextFunction): void => {
     Promise.resolve(func(req, res, next)).catch(next);
   };

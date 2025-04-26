@@ -11,8 +11,11 @@ import {
 
 const router = express.Router();
 
+// User routes
 router.post("/new", newOrder);
 router.get("/my", myOrders);
+
+// Admin routes
 router.get("/all", adminOnly, allOrders);
 router
   .route("/:id")

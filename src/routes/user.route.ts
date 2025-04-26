@@ -12,11 +12,13 @@ import { adminOnly } from "../middlewares/auth.middleware";
 
 const router = express.Router();
 
+// Public routes
 router.post("/new", newUser);
-router.get("/all", adminOnly, getAllUsers);
 router.get("/cart", getUserCart);
 router.put("/cart-update", updateCart);
 
+// Admin routes
+router.get("/all", adminOnly, getAllUsers);
 router
   .route("/:id")
   .get(getUser)

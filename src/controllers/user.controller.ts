@@ -12,16 +12,20 @@ const newUser = tryCatch(
   ) => {
     const { name, email, photo, gender, _id, dob } = req.body;
 
+    if (!_id || !name || !email || !photo || !gender || !dob) {
+      return next(
+        new ErrorHandler("One of the required fields is missing", 400)
+      );
+    }
+
     let user = await User.findById(_id);
 
-    if (user)
+    if (user) {
       return res.status(200).json({
         success: true,
         message: `Welcome back, ${user.name}`,
       });
-
-    if (!_id || !name || !email || !photo || !gender || !dob)
-      next(new ErrorHandler("One of the fields is missing", 400));
+    }
 
     user = await User.create({
       name,
@@ -41,7 +45,6 @@ const newUser = tryCatch(
 
 const getAllUsers = tryCatch(async (req, res, next) => {
   const users = await User.find({});
-
   return res.status(200).json({
     success: true,
     users,
@@ -50,9 +53,9 @@ const getAllUsers = tryCatch(async (req, res, next) => {
 
 const getUser = tryCatch(async (req, res, next) => {
   const { id } = req.params;
-  const user = await User.findById(id);
 
-  if (!user) return next(new ErrorHandler("No user found", 400));
+  const user = await User.findById(id);
+  if (!user) return next(new ErrorHandler("No user found", 404));
 
   return res.status(200).json({
     success: true,
@@ -62,15 +65,15 @@ const getUser = tryCatch(async (req, res, next) => {
 
 const deleteUser = tryCatch(async (req, res, next) => {
   const { id } = req.params;
-  const user = await User.findById(id);
 
-  if (!user) return next(new ErrorHandler("No user found", 400));
+  const user = await User.findById(id);
+  if (!user) return next(new ErrorHandler("No user found", 404));
 
   await user.deleteOne();
 
   return res.status(200).json({
     success: true,
-    message: "User deleted succesfully",
+    message: "User deleted successfully",
   });
 });
 
@@ -78,8 +81,9 @@ const updateUser = tryCatch(async (req, res, next) => {
   const { id } = req.params;
 
   const user = await User.findById(id);
-  if (!user) return next(new ErrorHandler("No user found", 400));
+  if (!user) return next(new ErrorHandler("No user found", 404));
 
+  // Toggle user role
   user.role = user.role === "user" ? "admin" : "user";
 
   await user.save();
@@ -92,33 +96,36 @@ const updateUser = tryCatch(async (req, res, next) => {
   });
 });
 
-// upadte user cart
+// Update user cart
 const updateCart = tryCatch(async (req, res, next) => {
   const { userId, cartItems } = req.body;
 
-  if (!userId) return next(new ErrorHandler("Invalid Data", 400));
+  if (!userId || !cartItems) {
+    return next(new ErrorHandler("Invalid data provided", 400));
+  }
 
   const user = await User.findByIdAndUpdate(userId, { cartData: cartItems });
-
-  if (!user) return next(new ErrorHandler("No user found", 400));
+  if (!user) return next(new ErrorHandler("No user found", 404));
 
   return res.status(200).json({
     success: true,
-    message: `Cart updated`,
+    message: "Cart updated successfully",
   });
 });
 
 const getUserCart = tryCatch(async (req, res, next) => {
   const { id } = req.query;
+
+  if (!id) return next(new ErrorHandler("User ID is required", 400));
+
   const user = await User.findById(id);
+  if (!user) return next(new ErrorHandler("No user found", 404));
 
-  if (!user) return next(new ErrorHandler("No user found", 400));
-
-  let cartData = await user.cartData;
+  const cartData = user.cartData;
 
   return res.status(200).json({
     success: true,
-    message: `User cart fetched`,
+    message: "User cart fetched successfully",
     cartData,
   });
 });
@@ -126,9 +133,6 @@ const getUserCart = tryCatch(async (req, res, next) => {
 export {
   deleteUser,
   getAllUsers,
-  getUser,
-  newUser,
-  updateUser,
-  updateCart,
-  getUserCart,
+  getUser, getUserCart, newUser, updateCart, updateUser
 };
+

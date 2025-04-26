@@ -12,6 +12,26 @@ import { invalidateCache } from "../utils/features";
 import { cloudinaryDelete, cloudinaryUpload } from "../utils/fileUpload";
 import ErrorHandler from "../utils/utility-class";
 
+const uploadImagesToCloudinary = async (images: Image[]) => {
+  return await Promise.all(
+    images.map(async (image) => {
+      try {
+        const response = await cloudinaryUpload(image.path);
+        return response ? response.secure_url : null;
+      } catch (error) {
+        console.error(error);
+        return null;
+      }
+    })
+  );
+};
+
+const deleteImagesFromCloudinary = async (images: string[]) => {
+  if (images.length > 0) {
+    await cloudinaryDelete(images);
+  }
+};
+
 const getAllProducts = tryCatch(
   async (req: Request<{}, {}, {}, SearchRequestQuery>, res, next) => {
     const { category, price, search, sort } = req.query;
@@ -41,17 +61,16 @@ const getAllProducts = tryCatch(
       .skip(skip);
 
     const [products, filteredOnlyProducts] = await Promise.all([
-      await productsPromise,
-      await Product.find(baseQuery),
+      productsPromise,
+      Product.find(baseQuery),
     ]);
 
     const totalPage = Math.ceil(filteredOnlyProducts.length / limit);
 
-    return res.status(201).json({ success: true, products, totalPage });
+    return res.status(200).json({ success: true, products, totalPage });
   }
 );
 
-//revalidate
 const getLatestProduct = tryCatch(async (req, res, next) => {
   let products;
 
@@ -62,10 +81,9 @@ const getLatestProduct = tryCatch(async (req, res, next) => {
     myCache.set("latest-products", JSON.stringify(products));
   }
 
-  return res.status(201).json({ success: true, products });
+  return res.status(200).json({ success: true, products });
 });
 
-//revalidate
 const getAllCategories = tryCatch(async (req, res, next) => {
   let categories;
 
@@ -76,10 +94,9 @@ const getAllCategories = tryCatch(async (req, res, next) => {
     myCache.set("categories", JSON.stringify(categories));
   }
 
-  return res.status(201).json({ success: true, categories });
+  return res.status(200).json({ success: true, categories });
 });
 
-//revalidate
 const getAdminProducts = tryCatch(async (req, res, next) => {
   let products;
 
@@ -90,7 +107,7 @@ const getAdminProducts = tryCatch(async (req, res, next) => {
     myCache.set("all-products", JSON.stringify(products));
   }
 
-  return res.status(201).json({ success: true, products });
+  return res.status(200).json({ success: true, products });
 });
 
 const getProductDetails = tryCatch(async (req, res, next) => {
@@ -106,7 +123,7 @@ const getProductDetails = tryCatch(async (req, res, next) => {
     myCache.set(`product-${id}`, JSON.stringify(product));
   }
 
-  return res.status(201).json({ success: true, product });
+  return res.status(200).json({ success: true, product });
 });
 
 const updateProduct = tryCatch(async (req, res, next) => {
@@ -120,16 +137,14 @@ const updateProduct = tryCatch(async (req, res, next) => {
 
   const currentImages = product.image;
 
-  // Update only the specific indexes
   const updatedImages = [...currentImages];
-
   const imageKeys = ["image1", "image2", "image3", "image4"];
 
   for (let i = 0; i < imageKeys.length; i++) {
     const key = imageKeys[i];
     if (files[key]?.[0]) {
-      // Optionally: delete old image from Cloudinary if exists
-      if (currentImages[i]) await cloudinaryDelete([currentImages[i]]);
+      if (currentImages[i])
+        await deleteImagesFromCloudinary([currentImages[i]]);
       const uploaded = await cloudinaryUpload(files[key][0].path);
       updatedImages[i] = uploaded!.secure_url;
     }
@@ -137,7 +152,6 @@ const updateProduct = tryCatch(async (req, res, next) => {
 
   product.image = updatedImages.filter((url) => url !== null);
 
-  // Update other fields
   if (name) product.name = name;
   if (price) product.price = price;
   if (category) product.category = category;
@@ -163,10 +177,9 @@ const deleteProduct = tryCatch(async (req, res, next) => {
   const { id: productId } = req.params;
 
   const product = await Product.findById(productId);
-
   if (!product) return next(new ErrorHandler("No product found", 404));
 
-  await cloudinaryDelete(product.image);
+  await deleteImagesFromCloudinary(product.image);
 
   await product.deleteOne();
 
@@ -177,7 +190,7 @@ const deleteProduct = tryCatch(async (req, res, next) => {
   });
 
   return res
-    .status(201)
+    .status(200)
     .json({ success: true, message: "Product deleted successfully" });
 });
 
@@ -216,27 +229,15 @@ const newProduct = tryCatch(
 
     if (images.length <= 0) {
       return next(
-        new ErrorHandler("Please add atleast one product image", 404)
+        new ErrorHandler("Please add at least one product image", 404)
       );
     }
 
-    const cloudinaryUrls = await Promise.all(
-      images.map(async (image) => {
-        try {
-          let response = await cloudinaryUpload(image.path);
-          if (response) return response.secure_url;
-        } catch (error) {
-          console.error(error);
-          return null;
-        }
-      })
-    );
-
-    // console.log(cloudinaryUrls);
+    const cloudinaryUrls = await uploadImagesToCloudinary(images);
 
     if (cloudinaryUrls.length === 0)
       return next(
-        new ErrorHandler("Images could not be uploaded to cloudinary", 404)
+        new ErrorHandler("Images could not be uploaded to Cloudinary", 404)
       );
 
     await Product.create({
@@ -266,5 +267,6 @@ export {
   getLatestProduct,
   getProductDetails,
   newProduct,
-  updateProduct,
+  updateProduct
 };
+
