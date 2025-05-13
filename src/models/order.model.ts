@@ -86,19 +86,17 @@ const orderSchema = new Schema(
       required: true,
       default: false,
     },
-    orderItems: [
-      {
-        image: String,
-        name: String,
-        price: Number,
-        size: String,
-        quantity: Number,
-        _id: {
-          type: mongoose.Types.ObjectId,
-          ref: "Product",
-        },
+    orderItem: {
+      image: String,
+      name: String,
+      price: Number,
+      size: String,
+      quantity: Number,
+      _id: {
+        type: mongoose.Types.ObjectId,
+        ref: "Product",
       },
-    ],
+    },
   },
   { timestamps: true }
 );

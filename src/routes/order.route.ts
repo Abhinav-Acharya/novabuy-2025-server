@@ -1,5 +1,4 @@
 import express from "express";
-import { adminOnly } from "../middlewares/auth.middleware";
 import {
   allOrders,
   deleteOrder,
@@ -8,6 +7,7 @@ import {
   newOrder,
   processOrder,
 } from "../controllers/order.controller";
+import { adminOnly } from "../middlewares/auth.middleware";
 
 const router = express.Router();
 

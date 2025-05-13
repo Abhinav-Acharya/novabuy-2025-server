@@ -14,7 +14,7 @@ const getCachedData = async (key: string, fetchData: () => Promise<any>) => {
   const data = await fetchData();
 
   myCache.set(key, JSON.stringify(data));
-  
+
   return data;
 };
 
@@ -49,29 +49,34 @@ const getOrderDetails = tryCatch(async (req, res, next) => {
   return res.status(200).json({ success: true, order });
 });
 
-const validateNewOrder = (body: INewOrderReqBody) => {
-  const { shippingInfo, orderItems, user, total, paymentMethod } = body;
-  if (!shippingInfo || !user || !orderItems || !total || !paymentMethod) {
-    throw new ErrorHandler("Invalid order data", 400);
-  }
-};
-
 const newOrder = tryCatch(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { shippingInfo, orderItems, user, total, paymentMethod } = req.body;
-
-    validateNewOrder(req.body);
-
-    const paymentStatus = ["Stripe", "Razorpay"].includes(paymentMethod);
-
-    const order = await Order.create({
+    const {
       shippingInfo,
       orderItems,
       user,
       total,
       paymentMethod,
-      paymentStatus,
-    });
+    }: INewOrderReqBody = req.body;
+
+    if (!shippingInfo || !user || !orderItems || !total || !paymentMethod) {
+      throw new ErrorHandler("Invalid order data", 400);
+    }
+
+    const paymentStatus = ["Stripe", "Razorpay"].includes(paymentMethod);
+
+    const order = await Promise.all(
+      orderItems.map(async (orderItem: any) => {
+        return await Order.create({
+          shippingInfo,
+          orderItem,
+          user,
+          total: orderItem.price * orderItem.quantity,
+          paymentMethod,
+          paymentStatus,
+        });
+      })
+    );
 
     invalidateCache({
       product: true,

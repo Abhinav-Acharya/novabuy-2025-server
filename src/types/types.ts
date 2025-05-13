@@ -8,7 +8,7 @@ export interface IProduct {
   price: number;
   image: string[];
   category: string;
-  subCategory?: string;
+  subCategory: string;
   sizes?: string[];
   bestseller: boolean;
 }
@@ -32,7 +32,7 @@ export interface INewProductRequestBody {
   image3?: File;
   image4?: File;
   description: string;
-  subCategory?: string;
+  subCategory: string;
   sizes: string;
   bestseller: string;
 }
