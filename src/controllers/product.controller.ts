@@ -128,8 +128,16 @@ const getProductDetails = tryCatch(async (req, res, next) => {
 
 const updateProduct = tryCatch(async (req, res, next) => {
   const { id } = req.params;
-  const { name, description, price, category, subCategory, sizes, bestseller } =
-    req.body;
+  const {
+    name,
+    description,
+    price,
+    stock,
+    category,
+    subCategory,
+    sizes,
+    bestseller,
+  } = req.body;
   const files = (req.files as any) || {};
 
   const product = await Product.findById(id);
@@ -154,6 +162,7 @@ const updateProduct = tryCatch(async (req, res, next) => {
 
   if (name) product.name = name;
   if (price) product.price = price;
+  if (stock) product.stock = stock;
   if (category) product.category = category;
   if (description) product.description = description;
   if (subCategory) product.subCategory = subCategory;
@@ -204,13 +213,21 @@ const newProduct = tryCatch(
       name,
       description,
       price,
+      stock,
       category,
       subCategory,
       sizes,
       bestseller,
     } = req.body;
 
-    if (!name || !description || !price || !category || bestseller === null) {
+    if (
+      !name ||
+      !description ||
+      !price ||
+      !stock ||
+      !category ||
+      bestseller === null
+    ) {
       return next(new ErrorHandler("One of the fields is missing", 404));
     }
 
@@ -244,6 +261,7 @@ const newProduct = tryCatch(
       name,
       description,
       price: Number(price),
+      stock: Number(stock),
       category,
       subCategory,
       sizes: JSON.parse(sizes),
@@ -267,6 +285,5 @@ export {
   getLatestProduct,
   getProductDetails,
   newProduct,
-  updateProduct
+  updateProduct,
 };
-

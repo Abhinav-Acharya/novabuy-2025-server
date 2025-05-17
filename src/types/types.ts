@@ -26,7 +26,7 @@ export interface INewProductRequestBody {
   name: string;
   category: string;
   price: number;
-  // stock: number;
+  stock: number;
   image1?: File;
   image2?: File;
   image3?: File;

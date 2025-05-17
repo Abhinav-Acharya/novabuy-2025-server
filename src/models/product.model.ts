@@ -15,7 +15,7 @@ const productSchema = new Schema(
       required: [true, "Price is required"],
     },
     image: {
-      type: Array,
+      type: [String],
       required: [true, "Image is required"],
     },
     category: {
@@ -31,9 +31,13 @@ const productSchema = new Schema(
       type: [String],
       required: false,
     },
+    stock: {
+      type: Number,
+      required: [true, "Stock is required"],
+    },
     bestseller: {
       type: Boolean,
-      required: [true, "Bestseller is required"],
+      default: false,
     },
   },
   { timestamps: true }
