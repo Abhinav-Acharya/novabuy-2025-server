@@ -127,18 +127,18 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
-userSchema.virtual("age").get(function () {
-  const today = new Date();
-  const dob = this.dob;
-  let age = today.getFullYear() - dob.getFullYear();
+// userSchema.virtual("age").get(function () {
+//   const today = new Date();
+//   const dob = this.dob;
+//   let age = today.getFullYear() - dob.getFullYear();
 
-  if (
-    today.getMonth() < dob.getMonth() ||
-    (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())
-  )
-    age--;
+//   if (
+//     today.getMonth() < dob.getMonth() ||
+//     (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())
+//   )
+//     age--;
 
-  return age;
-});
+//   return age;
+// });
 
 export const User = mongoose.models.user || mongoose.model("User", userSchema);

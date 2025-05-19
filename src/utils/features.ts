@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { myCache } from "../app";
-import { InvalidateCacheProps } from "../types/types";
+import { InvalidateCacheProps, OrderItemType } from "../types/types";
+import { Product } from "../models/product.model";
 
 export const connectDB = async (uri: string) => {
   try {
@@ -50,16 +51,14 @@ export const invalidateCache = ({
   }
 };
 
-// Uncomment and use these utility functions as needed:
-
-// export const reduceStock = async (orderItems: OrderItemType[]) => {
-//   for (const order of orderItems) {
-//     const product = await Product.findById(order.productId);
-//     if (!product) throw new Error("Product not found");
-//     product.stock -= order.quantity;
-//     await product.save();
-//   }
-// };
+export const reduceStock = async (orderItems: OrderItemType[]) => {
+  for (const order of orderItems) {
+    const product = await Product.findById(order._id);
+    if (!product) throw new Error("Product not found");
+    product.stock -= order.quantity;
+    await product.save();
+  }
+};
 
 // export const calcPercent = (currentMonth: number, previousMonth: number) => {
 //   if (previousMonth === 0) return currentMonth * 100;

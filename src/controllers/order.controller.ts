@@ -3,7 +3,7 @@ import { myCache } from "../app";
 import { tryCatch } from "../middlewares/error.middleware";
 import { Order } from "../models/order.model";
 import { INewOrderReqBody } from "../types/types";
-import { invalidateCache } from "../utils/features";
+import { invalidateCache, reduceStock } from "../utils/features";
 import ErrorHandler from "../utils/utility-class";
 
 const getCachedData = async (key: string, fetchData: () => Promise<any>) => {
@@ -78,6 +78,8 @@ const newOrder = tryCatch(
       })
     );
 
+    await reduceStock(orderItems);
+
     invalidateCache({
       product: true,
       admin: true,
@@ -144,5 +146,6 @@ export {
   getOrderDetails,
   myOrders,
   newOrder,
-  processOrder,
+  processOrder
 };
+
