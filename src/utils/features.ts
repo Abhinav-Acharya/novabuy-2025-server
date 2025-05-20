@@ -1,7 +1,9 @@
 import mongoose from "mongoose";
 import { myCache } from "../app";
-import { InvalidateCacheProps, OrderItemType } from "../types/types";
 import { Product } from "../models/product.model";
+import { InvalidateCacheProps, OrderItemType } from "../types/types";
+
+const dbName = process.env.DB_NAME;
 
 export const connectDB = async (uri: string) => {
   try {
@@ -42,23 +44,22 @@ export const invalidateCache = ({
   }
 
   if (order) {
-    const orderKeys = [
-      "all-orders",
-      `my-orders-${userId}`,
-      `order-${orderId}`,
-    ];
+    const orderKeys = ["all-orders", `my-orders-${userId}`, `order-${orderId}`];
     myCache.del(orderKeys);
   }
 };
 
 export const reduceStock = async (orderItems: OrderItemType[]) => {
-  for (const order of orderItems) {
+  for (let i = 0; i < orderItems.length; i++) {
+    const order = orderItems[i];
     const product = await Product.findById(order._id);
-    if (!product) throw new Error("Product not found");
+    if (!product) throw new Error("Product Not Found");
     product.stock -= order.quantity;
     await product.save();
   }
 };
+
+//admin features
 
 // export const calcPercent = (currentMonth: number, previousMonth: number) => {
 //   if (previousMonth === 0) return currentMonth * 100;

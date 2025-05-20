@@ -133,6 +133,9 @@ const getUserCart = tryCatch(async (req, res, next) => {
 export {
   deleteUser,
   getAllUsers,
-  getUser, getUserCart, newUser, updateCart, updateUser
+  getUser,
+  getUserCart,
+  newUser,
+  updateCart,
+  updateUser,
 };
-

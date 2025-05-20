@@ -140,19 +140,34 @@ const updateProduct = tryCatch(async (req, res, next) => {
   } = req.body;
   const files = (req.files as any) || {};
 
+  const removeImages = req.body.removeImages
+    ? JSON.parse(req.body.removeImages)
+    : [];
+
   const product = await Product.findById(id);
   if (!product) return next(new ErrorHandler("No product found", 404));
 
   const currentImages = product.image;
 
   const updatedImages = [...currentImages];
+
+  for (const index of removeImages) {
+    const imageUrl = updatedImages[index];
+    if (imageUrl) {
+      await deleteImagesFromCloudinary([imageUrl]);
+      updatedImages[index] = null;
+    }
+  }
+
   const imageKeys = ["image1", "image2", "image3", "image4"];
 
   for (let i = 0; i < imageKeys.length; i++) {
     const key = imageKeys[i];
     if (files[key]?.[0]) {
-      if (currentImages[i])
+      if (currentImages[i]) {
         await deleteImagesFromCloudinary([currentImages[i]]);
+      }
+
       const uploaded = await cloudinaryUpload(files[key][0].path);
       updatedImages[i] = uploaded!.secure_url;
     }
