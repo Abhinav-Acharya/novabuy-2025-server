@@ -23,7 +23,7 @@ const cloudinaryUpload = async (imagePath: string) => {
     return response;
   } catch (error) {
     fs.unlinkSync(imagePath); //remove locally saved temporary file as upload operation failed
-    console.log(error);
+    console.error(error);
     return null;
   }
 };

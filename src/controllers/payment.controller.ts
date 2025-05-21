@@ -36,9 +36,6 @@ const createCoupon = tryCatch(async (req, res, next) => {
 const getAllCoupons = tryCatch(async (req, res, next) => {
   const coupons = await Coupon.find({});
 
-  if (coupons.length === 0)
-    return next(new ErrorHandler("No coupons available", 400));
-
   return res.status(200).json({
     success: true,
     coupons,
