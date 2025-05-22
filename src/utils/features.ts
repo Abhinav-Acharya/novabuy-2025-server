@@ -7,7 +7,7 @@ const dbName = process.env.DB_NAME;
 
 export const connectDB = async (uri: string) => {
   try {
-    await mongoose.connect(uri, { dbName: "NovaBuy" });
+    await mongoose.connect(uri, { dbName });
     console.log("DB connected");
   } catch (error) {
     console.error("Database connection failed:", error, uri);
