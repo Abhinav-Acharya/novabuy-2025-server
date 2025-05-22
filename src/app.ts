@@ -23,10 +23,11 @@ const app = express();
 const port = process.env.PORT || 4000;
 const mongoUri = process.env.MONGODB_URI || "";
 const stripeKey = process.env.STRIPE_KEY || "";
+const dbName = process.env.DB_NAME || "";
 
 const clientURL = process.env.CLIENT_URL || "";
 
-connectDB(mongoUri);
+connectDB(mongoUri, dbName);
 
 export const stripe = new Stripe(stripeKey);
 

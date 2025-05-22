@@ -3,9 +3,8 @@ import { myCache } from "../app";
 import { Product } from "../models/product.model";
 import { InvalidateCacheProps, OrderItemType } from "../types/types";
 
-const dbName = process.env.DB_NAME;
-
-export const connectDB = async (uri: string) => {
+export const connectDB = async (uri: string, dbName: string) => {
+  console.log(uri, dbName);
   try {
     await mongoose.connect(uri, { dbName });
     console.log("DB connected");
