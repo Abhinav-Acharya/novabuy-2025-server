@@ -51,7 +51,7 @@ app.use(
   })
 );
 
-app.get("/api/v1", (req, res) => {
+app.get("/", (req, res) => {
   res.send("API Working with /api/v1");
 });
 

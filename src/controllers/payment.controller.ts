@@ -6,15 +6,19 @@ import { User } from "../models/user.model";
 import { IProduct, OrderItemType, ShippingInfoType } from "../types/types";
 import ErrorHandler from "../utils/utility-class";
 
-const calculateOrderTotals = (items: OrderItemType[], products: IProduct[]) => {
+const calculateOrderTotals = (
+  items: OrderItemType[],
+  products: IProduct[],
+  discountAmount: number
+) => {
   const subtotal = products.reduce((prev, curr) => {
     const item = items.find((i) => i._id === curr._id.toString());
     return item ? curr.price * item.quantity + prev : prev;
   }, 0);
 
   const tax = subtotal * 0.18;
-  const shipping = subtotal > 1000 ? 0 : 200;
-  const total = Math.floor(subtotal + tax + shipping);
+  const shipping = subtotal < 5000 ? 299 : 0;
+  const total = Math.max(subtotal + tax + shipping - discountAmount, 0);
 
   return { subtotal, tax, shipping, total };
 };
@@ -78,11 +82,11 @@ const createPaymentIntent = tryCatch(async (req, res, next) => {
   const {
     items,
     shippingInfo,
-  }: // coupon
-  {
+    coupon,
+  }: {
     items: OrderItemType[];
     shippingInfo: ShippingInfoType;
-    // coupon: string | undefined;
+    coupon: string | undefined;
   } = req.body;
 
   if (!items)
@@ -91,13 +95,13 @@ const createPaymentIntent = tryCatch(async (req, res, next) => {
   if (!shippingInfo)
     return next(new ErrorHandler("Please add shipping details", 400));
 
-  // let discountAmount = 0;
+  let discountAmount = 0;
 
-  // if (coupon) {
-  //   const discount = await Coupon.findOne({ code: coupon });
-  //   if (!discount) return next(new ErrorHandler("Invalid Coupon Code", 400));
-  //   discountAmount = discount.amount;
-  // }
+  if (coupon) {
+    const discount = await Coupon.findOne({ code: coupon });
+    if (!discount) return next(new ErrorHandler("Invalid Coupon Code", 400));
+    discountAmount = discount.amount;
+  }
 
   const productIDs = items.map((item) => item._id);
 
@@ -105,8 +109,7 @@ const createPaymentIntent = tryCatch(async (req, res, next) => {
     _id: { $in: productIDs },
   });
 
-  // Calculate totals using helper function
-  const { total } = calculateOrderTotals(items, products);
+  const { total } = calculateOrderTotals(items, products, discountAmount);
 
   const paymentIntent = await stripe.paymentIntents.create({
     amount: total * 100,

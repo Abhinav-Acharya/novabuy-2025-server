@@ -4,10 +4,10 @@ import { Product } from "../models/product.model";
 import { InvalidateCacheProps, OrderItemType } from "../types/types";
 
 export const connectDB = async (uri: string, dbName: string) => {
-  console.log(uri, dbName);
+  // console.log(uri, dbName);
   try {
     await mongoose.connect(uri, { dbName });
-    console.log("DB connected");
+    console.log("Database connection successfull.");
   } catch (error) {
     console.error("Database connection failed:", error, uri);
   }
