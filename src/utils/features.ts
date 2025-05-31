@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { myCache } from "../app";
 import { Product } from "../models/product.model";
-import { InvalidateCacheProps, OrderItemType } from "../types/types";
+import { InvalidateCacheProps, IProduct, OrderItemType } from "../types/types";
 
 export const connectDB = async (uri: string, dbName: string) => {
   // console.log(uri, dbName);
@@ -56,6 +56,23 @@ export const reduceStock = async (orderItems: OrderItemType[]) => {
     product.stock -= order.quantity;
     await product.save();
   }
+};
+
+export const calculateOrderTotal = (
+  items: OrderItemType[],
+  products: IProduct[],
+  discountAmount: number
+) => {
+  const subtotal = products.reduce((prev, curr) => {
+    const item = items.find((i) => i._id === curr._id.toString());
+    return item ? curr.price * item.quantity + prev : prev;
+  }, 0);
+
+  const tax = subtotal * 0.18;
+  const shipping = subtotal < 5000 ? 299 : 0;
+  const total = Math.max(subtotal + tax + shipping - discountAmount, 0);
+
+  return { subtotal, tax, shipping, total };
 };
 
 //admin features

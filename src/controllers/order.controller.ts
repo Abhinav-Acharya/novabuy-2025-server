@@ -5,6 +5,7 @@ import { Order } from "../models/order.model";
 import { INewOrderReqBody } from "../types/types";
 import { invalidateCache, reduceStock } from "../utils/features";
 import ErrorHandler from "../utils/utility-class";
+import { v4 as uuidv4 } from "uuid";
 
 const getCachedData = async (key: string, fetchData: () => Promise<any>) => {
   if (myCache.has(key)) {
@@ -65,6 +66,8 @@ const newOrder = tryCatch(
 
     const paymentStatus = ["Stripe", "Razorpay"].includes(paymentMethod);
 
+    const groupId = uuidv4();
+
     const order = await Promise.all(
       orderItems.map(async (orderItem: any) => {
         return await Order.create({
@@ -74,6 +77,7 @@ const newOrder = tryCatch(
           total: orderItem.price * orderItem.quantity,
           paymentMethod,
           paymentStatus,
+          groupId,
         });
       })
     );
@@ -146,6 +150,5 @@ export {
   getOrderDetails,
   myOrders,
   newOrder,
-  processOrder
+  processOrder,
 };
-

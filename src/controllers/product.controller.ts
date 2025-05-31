@@ -84,8 +84,9 @@ const getLatestProduct = tryCatch(async (req, res, next) => {
   return res.status(200).json({ success: true, products });
 });
 
-const getAllCategories = tryCatch(async (req, res, next) => {
+const getAllCategoriesAndSubcategories = tryCatch(async (req, res, next) => {
   let categories;
+  let subCategories;
 
   if (myCache.has("categories")) {
     categories = JSON.parse(myCache.get("categories") as string);
@@ -94,7 +95,14 @@ const getAllCategories = tryCatch(async (req, res, next) => {
     myCache.set("categories", JSON.stringify(categories));
   }
 
-  return res.status(200).json({ success: true, categories });
+  if (myCache.has("subCategories")) {
+    subCategories = JSON.parse(myCache.get("subCategories") as string);
+  } else {
+    subCategories = await Product.distinct("subCategory");
+    myCache.set("subCategories", JSON.stringify(subCategories));
+  }
+
+  return res.status(200).json({ success: true, categories, subCategories });
 });
 
 const getAdminProducts = tryCatch(async (req, res, next) => {
@@ -295,7 +303,7 @@ const newProduct = tryCatch(
 export {
   deleteProduct,
   getAdminProducts,
-  getAllCategories,
+  getAllCategoriesAndSubcategories,
   getAllProducts,
   getLatestProduct,
   getProductDetails,

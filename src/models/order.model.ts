@@ -40,6 +40,10 @@ const orderSchema = new Schema(
         required: true,
       },
     },
+    groupId: {
+      type: String,
+      required: true,
+    },
     user: {
       type: String,
       ref: "User",

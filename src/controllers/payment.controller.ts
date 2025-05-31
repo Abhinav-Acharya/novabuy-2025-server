@@ -3,25 +3,9 @@ import { tryCatch } from "../middlewares/error.middleware";
 import { Coupon } from "../models/coupon.model";
 import { Product } from "../models/product.model";
 import { User } from "../models/user.model";
-import { IProduct, OrderItemType, ShippingInfoType } from "../types/types";
+import { OrderItemType, ShippingInfoType } from "../types/types";
+import { calculateOrderTotal } from "../utils/features";
 import ErrorHandler from "../utils/utility-class";
-
-const calculateOrderTotals = (
-  items: OrderItemType[],
-  products: IProduct[],
-  discountAmount: number
-) => {
-  const subtotal = products.reduce((prev, curr) => {
-    const item = items.find((i) => i._id === curr._id.toString());
-    return item ? curr.price * item.quantity + prev : prev;
-  }, 0);
-
-  const tax = subtotal * 0.18;
-  const shipping = subtotal < 5000 ? 299 : 0;
-  const total = Math.max(subtotal + tax + shipping - discountAmount, 0);
-
-  return { subtotal, tax, shipping, total };
-};
 
 const createCoupon = tryCatch(async (req, res, next) => {
   const { coupon, amount } = req.body;
@@ -109,7 +93,7 @@ const createPaymentIntent = tryCatch(async (req, res, next) => {
     _id: { $in: productIDs },
   });
 
-  const { total } = calculateOrderTotals(items, products, discountAmount);
+  const { total } = calculateOrderTotal(items, products, discountAmount);
 
   const paymentIntent = await stripe.paymentIntents.create({
     amount: total * 100,
@@ -134,9 +118,9 @@ const createPaymentIntent = tryCatch(async (req, res, next) => {
 });
 
 export {
-  getDiscountAmount,
   createCoupon,
   createPaymentIntent,
   deleteCoupon,
-  getAllCoupons,
+  getAllCoupons, getDiscountAmount
 };
+

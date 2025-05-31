@@ -1,15 +1,14 @@
 import express from "express";
-import { adminOnly } from "../middlewares/auth.middleware";
 import {
   deleteProduct,
   getAdminProducts,
-  getAllCategories,
-  getAllProducts,
+  getAllCategoriesAndSubcategories,
   getLatestProduct,
   getProductDetails,
   newProduct,
   updateProduct,
 } from "../controllers/product.controller";
+import { adminOnly } from "../middlewares/auth.middleware";
 import { upload } from "../middlewares/multer.middleware";
 
 const router = express.Router();
@@ -28,7 +27,7 @@ router.get("/all", getAdminProducts);
 
 // Public routes
 router.get("/latest", getLatestProduct);
-router.get("/categories", getAllCategories);
+router.get("/categories", getAllCategoriesAndSubcategories);
 
 // Product-specific routes
 router
