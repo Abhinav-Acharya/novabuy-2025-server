@@ -136,6 +136,7 @@ const getProductDetails = tryCatch(async (req, res, next) => {
 
 const updateProduct = tryCatch(async (req, res, next) => {
   const { id } = req.params;
+
   const {
     name,
     description,
@@ -146,6 +147,7 @@ const updateProduct = tryCatch(async (req, res, next) => {
     sizes,
     bestseller,
   } = req.body;
+
   const files = (req.files as any) || {};
 
   const removeImages = req.body.removeImages
@@ -182,6 +184,9 @@ const updateProduct = tryCatch(async (req, res, next) => {
   }
 
   product.image = updatedImages.filter((url) => url !== null);
+
+  if (product.image.length <= 0)
+    return next(new ErrorHandler("Please add atleast one product image.", 404));
 
   if (name) product.name = name;
   if (price) product.price = price;
